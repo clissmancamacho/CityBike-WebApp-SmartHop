@@ -12,7 +12,9 @@ app.use(index)
 
 const server = http.createServer(app)
 const io = socketIo(server) // < Interesting!
-let interval = 1000
+let interval = 5000
+
+const history = []
 
 const fetchDataBikes = () => {
   return new Promise((resolve, reject) => {
@@ -35,10 +37,13 @@ io.on("connection", (socket) => {
   setInterval(async () => {
     fetchDataBikes()
       .then((data) => {
+        data = { ...data, time: Date.now() }
+        history.push(data)
         socket.emit("dataMap", data)
       })
       .catch((error) => {
         console.log(error)
+        socket.emit("dataMap", history[history.length - 1])
       })
   }, interval)
   socket.on("disconnect", () => {
